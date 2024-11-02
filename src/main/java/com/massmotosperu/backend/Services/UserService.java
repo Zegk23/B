@@ -18,6 +18,12 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
+
+    public Optional<UsuarioModel> obtenerUsuarioPorId(int idUsuario) {
+        return usuarioRepository.findById(idUsuario);
+    }
+
+    
     public UserService(UsuarioRepository usuarioRepository,
                        PasswordEncoder passwordEncoder,
                        EmailService emailService) {

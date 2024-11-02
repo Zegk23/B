@@ -18,6 +18,7 @@ import org.thymeleaf.context.Context;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 @Service
 public class ReservaService {
 
@@ -84,6 +85,24 @@ public class ReservaService {
             emailService.sendEmail(reserva.getUsuario().getCorreoElectronico(), subject, templateName, context);
         } catch (MessagingException e) {
             System.err.println("Error al enviar el correo de confirmación de reserva: " + e.getMessage());
+        }
+    }
+    public List<ReservaMotosModel> obtenerReservasPorUsuario(int idUsuario) {
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findById(idUsuario);
+        if (usuarioOpt.isPresent()) {
+            return reservaMotosRepository.findByUsuario(usuarioOpt.get());
+        } else {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+    }
+
+    // Cancelar (eliminar) una reserva
+    public void cancelarReserva(int idReserva) {
+        Optional<ReservaMotosModel> reservaOpt = reservaMotosRepository.findById(idReserva);
+        if (reservaOpt.isPresent()) {
+            reservaMotosRepository.delete(reservaOpt.get());
+        } else {
+            throw new RuntimeException("Reserva no encontrada");
         }
     }
 }

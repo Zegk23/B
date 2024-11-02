@@ -42,10 +42,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         try {
-            Optional<UsuarioModel> user = userService.verificarUsuario(loginDTO.getCorreoElectronico(), loginDTO.getContraseña());
+            Optional<UsuarioModel> user = userService.verificarUsuario(loginDTO.getCorreoElectronico(),
+                    loginDTO.getContraseña());
             if (user.isPresent()) {
                 String token = jwtUtil.generarToken(user.get().getCorreoElectronico());
-    
+
                 // Crear un Map con el token y detalles del usuario
                 Map<String, Object> response = Map.of(
                         "token", token,
@@ -55,9 +56,8 @@ public class AuthController {
                         "apellidoMaterno", user.get().getApellidoMaterno(),
                         "correoElectronico", user.get().getCorreoElectronico(),
                         "telefono", user.get().getTelefono(),
-                        "dni", user.get().getDni()
-                );
-    
+                        "dni", user.get().getDni());
+
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.badRequest().body("Correo o contraseña incorrectos");
@@ -65,13 +65,13 @@ public class AuthController {
             return ResponseEntity.status(500).body("Error al iniciar sesión");
         }
     }
-    
 
     @PutMapping("/update")
     public ResponseEntity<?> actualizarUsuario(@RequestBody UsuarioModel updatedUser,
-                                               @RequestHeader("Authorization") String token) {
+            @RequestHeader("Authorization") String token) {
         try {
-            // Extraer el correo del token JWT usando getSubject en lugar de getCorreoFromToken
+            // Extraer el correo del token JWT usando getSubject en lugar de
+            // getCorreoFromToken
             String correo = jwtUtil.getSubject(token.replace("Bearer ", ""));
 
             Optional<UsuarioModel> user = userService.obtenerUsuarioPorCorreo(correo);
@@ -98,4 +98,18 @@ public class AuthController {
             return ResponseEntity.status(500).body("Error al actualizar los datos del usuario");
         }
     }
+
+    @GetMapping("/user/{idUsuario}")
+    public ResponseEntity<?> getUserById(@PathVariable int idUsuario) {
+        try {
+            Optional<UsuarioModel> user = userService.obtenerUsuarioPorId(idUsuario);
+            if (user.isPresent()) {
+                return ResponseEntity.ok(user.get());
+            }
+            return ResponseEntity.status(404).body("Usuario no encontrado");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al obtener los datos del usuario");
+        }
+    }
+
 }

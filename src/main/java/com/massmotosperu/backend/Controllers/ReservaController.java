@@ -1,11 +1,14 @@
+// ReservaController.java
 package com.massmotosperu.backend.Controllers;
 
-import com.massmotosperu.backend.DTOs.ReservaDTO;
 import com.massmotosperu.backend.Models.ReservaMotosModel;
 import com.massmotosperu.backend.Services.ReservaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import java.text.ParseException;
+import com.massmotosperu.backend.DTOs.ReservaDTO;
+import java.text.ParseException; 
+
+import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -23,5 +26,17 @@ public class ReservaController {
             reservaDTO.getIdUsuario(),
             reservaDTO.getFechaReserva()
         );
+    }
+
+    // Endpoint para obtener reservas de un usuario
+    @GetMapping("/usuario/{idUsuario}")
+    public List<ReservaMotosModel> obtenerReservasPorUsuario(@PathVariable int idUsuario) {
+        return reservaService.obtenerReservasPorUsuario(idUsuario);
+    }
+
+    // Endpoint para cancelar (eliminar) una reserva
+    @DeleteMapping("/cancelar/{idReserva}")
+    public void cancelarReserva(@PathVariable int idReserva) {
+        reservaService.cancelarReserva(idReserva);
     }
 }
