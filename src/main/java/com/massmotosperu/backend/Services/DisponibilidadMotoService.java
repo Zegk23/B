@@ -19,12 +19,7 @@ public class DisponibilidadMotoService {
     @Autowired
     private SedeTiendaRepository sedeTiendaRepository;
 
-    /**
-     * Obtiene una lista de tiendas donde una moto está disponible.
-     * 
-     * @param idMoto El ID de la moto a verificar.
-     * @return Lista de SedeTiendaModel con la información de las tiendas donde está disponible la moto.
-     */
+    // Metodo para saber en que tienda esta disponible una moto
     public List<SedeTiendaModel> getTiendasDisponiblesPorMoto(Integer idMoto) {
         List<DisponibilidadMotoModel> disponibilidad = disponibilidadMotoRepository.findByIdMoto(idMoto);
         return disponibilidad.stream()

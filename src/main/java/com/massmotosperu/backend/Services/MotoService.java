@@ -16,18 +16,22 @@ public class MotoService {
         this.motoRepository = motoRepository;
     }
 
+    // Metodo para listar todas las motos de la db
     public List<MotoModel> obtenerMotos() {
         return motoRepository.findAll();
     }
 
+    // Metodo para optener la moto por nombre
     public Optional<MotoModel> obtenerMotoPorNombre(String nombre) {
         return motoRepository.findByNombreMoto(nombre);
     }
 
+    // Metodo para obtener la moto por ID
     public Optional<MotoModel> obtenerMotoPorId(Integer id) {  
         return motoRepository.findById(id);
     }
 
+    // Metodo para eliminar moto por id
     public boolean eliminarMoto(Integer id) {  
         return motoRepository.findById(id).map(moto -> {
             motoRepository.delete(moto);

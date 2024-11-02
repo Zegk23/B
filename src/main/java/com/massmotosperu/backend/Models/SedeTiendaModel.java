@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Table(name = "tb_sedetienda")  
+@Table(name = "tb_sedetienda")
 @NoArgsConstructor
 @AllArgsConstructor
 public class SedeTiendaModel {
@@ -22,15 +22,16 @@ public class SedeTiendaModel {
 
     @NotBlank(message = "El nombre de la tienda es obligatorio")
     @Size(max = 100, message = "El nombre de la tienda no debe exceder los 100 caracteres")
-    @Column(name = "Nombre", nullable = false)
+    @Column(name = "Nombre", nullable = false, length = 100)
     private String nombreTienda;
 
     @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "El teléfono debe contener entre 7 y 15 dígitos")
-    @Column(name = "TelefonoTienda")
+    @Size(min = 7, max = 15, message = "El teléfono debe tener entre 7 y 15 caracteres")
+    @Column(name = "TelefonoTienda", length = 15)
     private String telefonoTienda;
 
     @NotBlank(message = "La ubicación es obligatoria")
     @Size(max = 100, message = "La ubicación no debe exceder los 100 caracteres")
-    @Column(name = "Ubicacion", nullable = false)
+    @Column(name = "Ubicacion", nullable = false, length = 100)
     private String ubicacion;
 }

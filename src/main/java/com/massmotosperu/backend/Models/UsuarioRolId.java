@@ -1,11 +1,20 @@
 package com.massmotosperu.backend.Models;
 
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Embeddable
 public class UsuarioRolId implements Serializable {
 
-    private int usuarioID;  
+    @NotNull(message = "El ID del usuario no puede ser nulo")
+    @Min(value = 1, message = "El ID del usuario debe ser mayor o igual a 1")
+    private int usuarioID;
+
+    @NotNull(message = "El ID del rol no puede ser nulo")
+    @Min(value = 1, message = "El ID del rol debe ser mayor o igual a 1")
     private int rolID;
 
     public UsuarioRolId() {}

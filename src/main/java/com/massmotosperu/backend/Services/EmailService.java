@@ -19,13 +19,14 @@ public class EmailService {
     @Autowired
     private TemplateEngine templateEngine;
 
+    // Metodo para enviar correos electronicos
     public void sendEmail(String to, String subject, String templateName, Context context) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setFrom("tu_correo@ejemplo.com");
+        helper.setFrom("massmotosperu@gmail.com");
 
         String htmlContent = templateEngine.process(templateName, context);
         helper.setText(htmlContent, true);

@@ -20,9 +20,4 @@ public class TiendaController {
     public List<SedeTiendaModel> listarTodasLasTiendas() {
         return tiendaService.listarTodasLasTiendas();
     }
-
-    @GetMapping("/moto/{idMoto}")
-    public List<SedeTiendaModel> obtenerTiendasConMotoDisponible(@PathVariable int idMoto) {
-        return tiendaService.obtenerTiendasConMotoDisponible(idMoto);
-    }
 }

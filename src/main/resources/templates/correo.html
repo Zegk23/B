@@ -1,12 +1,50 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Bienvenido</title>
+    <style>
+        * {
+            background-color: white !important;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 20px 0;
+            color: black !important;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        img {
+            max-width: 100%;
+            
+            height: auto;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
+
 <body>
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgtu6QN0jftYBCMEolQjIgI7nwOzyypiW76XgMUFFvna5Dg5HQ7rjvRwc7my-jO-UrgLqDaJ-LruxiaBZd-K4F_uGHbBb5viorUHa_bYTjQ8xLWhaLIbfjC-LDSnV3ooY0lMxY7VBnuiPelxlFv0_pG5Oil4zjuWJhp6Ivs13DbGNXetv5dDvr6-bX16zTW/s320/eHS-1ebx4o_2J-JNS61v8-transformed.webp"
+        alt="Bienvenida" /> <!-- Cambia la URL por la de tu imagen -->
     <h1>¡Hola, <span th:text="${nombre}">Usuario</span>!</h1>
-    <p>Te damos la bienvenida a nuestro servicio. Gracias por registrarte.</p>
+    <p>Te damos la bienvenida a nuestro comunidad. Gracias por registrarte.</p>
     <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
 </body>
+
 </html>

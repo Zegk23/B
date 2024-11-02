@@ -28,13 +28,11 @@ public class ReservaController {
         );
     }
 
-    // Endpoint para obtener reservas de un usuario
     @GetMapping("/usuario/{idUsuario}")
     public List<ReservaMotosModel> obtenerReservasPorUsuario(@PathVariable int idUsuario) {
         return reservaService.obtenerReservasPorUsuario(idUsuario);
     }
 
-    // Endpoint para cancelar (eliminar) una reserva
     @DeleteMapping("/cancelar/{idReserva}")
     public void cancelarReserva(@PathVariable int idReserva) {
         reservaService.cancelarReserva(idReserva);

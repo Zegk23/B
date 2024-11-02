@@ -11,6 +11,7 @@ import org.thymeleaf.context.Context;
 
 import javax.validation.Valid;
 import java.util.Optional;
+
 @Service
 public class UserService {
 
@@ -18,23 +19,24 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
-
+    // Metodo para obtener al usuario por su id
     public Optional<UsuarioModel> obtenerUsuarioPorId(int idUsuario) {
         return usuarioRepository.findById(idUsuario);
     }
 
-    
     public UserService(UsuarioRepository usuarioRepository,
-                       PasswordEncoder passwordEncoder,
-                       EmailService emailService) {
+            PasswordEncoder passwordEncoder,
+            EmailService emailService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
     }
 
+    // Metodo para registrar a un usuario
     public UsuarioModel registrarUsuario(@Valid UsuarioModel usuario) {
         if (usuarioRepository.findByCorreoElectronico(usuario.getCorreoElectronico()).isPresent()) {
-            throw new UsuarioYaExisteException("El correo electrónico ya está registrado: " + usuario.getCorreoElectronico());
+            throw new UsuarioYaExisteException(
+                    "El correo electrónico ya está registrado: " + usuario.getCorreoElectronico());
         }
 
         usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
@@ -43,6 +45,7 @@ public class UserService {
         return savedUser;
     }
 
+    // METODO PARA ENVIAR CORREO CUANDO SE REGISTRE UN USUARIO
     private void enviarCorreoBienvenida(UsuarioModel usuario) {
         String subject = "Bienvenido a Mass Motos";
         String templateName = "correo";
@@ -56,6 +59,7 @@ public class UserService {
         }
     }
 
+    // Metodo para enviar correo cuando se inicie sesion
     public void enviarCorreoInicioSesionExitoso(UsuarioModel usuario) {
         String subject = "Inicio de Sesión Exitoso";
         String templateName = "correoLogin";
@@ -69,6 +73,7 @@ public class UserService {
         }
     }
 
+    // Metodo para validar usuario
     public Optional<UsuarioModel> verificarUsuario(String correoElectronico, String contraseña) {
         Optional<UsuarioModel> usuario = usuarioRepository.findByCorreoElectronico(correoElectronico);
         if (usuario.isPresent() && passwordEncoder.matches(contraseña, usuario.get().getContraseña())) {
@@ -78,10 +83,12 @@ public class UserService {
         return Optional.empty();
     }
 
+    // Metodo para obtener el correo del usuario
     public Optional<UsuarioModel> obtenerUsuarioPorCorreo(String correoElectronico) {
         return usuarioRepository.findByCorreoElectronico(correoElectronico);
     }
 
+    // Metodo apra actualizar los datos del usuario usando DTO(DATA TRANSFER OBJECT)
     public void actualizarDatosUsuario(Integer userId, ActualizacionDatosDTO datosDTO) {
         UsuarioModel usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -91,7 +98,7 @@ public class UserService {
         usuario.setApellidoMaterno(datosDTO.getApellidoMaterno());
         usuario.setCorreoElectronico(datosDTO.getCorreoElectronico());
         usuario.setTelefono(datosDTO.getTelefono());
-        usuario.setEdad(datosDTO.getEdad());
+        usuario.setEdad(datosDTO.getEdad()); 
         usuario.setDni(datosDTO.getDni());
         usuario.setPreNombre(datosDTO.getPreNombre());
 
@@ -102,6 +109,7 @@ public class UserService {
         usuarioRepository.save(usuario);
     }
 
+    // Metodo para actualziar contraseña
     public void actualizarContrasena(UsuarioModel usuario, String nuevaContrasena) {
         usuario.setContraseña(passwordEncoder.encode(nuevaContrasena));
         usuarioRepository.save(usuario);

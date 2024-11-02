@@ -37,6 +37,7 @@ public class ReservaService {
     @Autowired
     private EmailService emailService;
 
+    // Metodo para crear una reserva con parametros como el id de la moto id de la tienda id del usuario y la fecha de reserva
     public ReservaMotosModel crearReserva(int idMoto, String idTienda, int idUsuario, String fechaReserva)
             throws ParseException {
         Optional<MotoModel> motoOpt = motoRepository.findById(idMoto);
@@ -69,6 +70,7 @@ public class ReservaService {
         }
     }
 
+    //  Metodo apra enviar correo de confirmacion de reserva 
     private void enviarCorreoConfirmacionReserva(ReservaMotosModel reserva) {
         String subject = "Confirmación de Reserva - Mass Motos";
         String templateName = "correoReserva"; 
@@ -87,6 +89,8 @@ public class ReservaService {
             System.err.println("Error al enviar el correo de confirmación de reserva: " + e.getMessage());
         }
     }
+    
+    // Metodo para obtener las reservas de cada usuario segun su id
     public List<ReservaMotosModel> obtenerReservasPorUsuario(int idUsuario) {
         Optional<UsuarioModel> usuarioOpt = usuarioRepository.findById(idUsuario);
         if (usuarioOpt.isPresent()) {
