@@ -1,10 +1,10 @@
 package com.massmotosperu.backend.Services;
 
-import com.massmotosperu.backend.DTOs.ActualizacionDatosDTO;
 import com.massmotosperu.backend.Exceptions.UsuarioYaExisteException;
 import com.massmotosperu.backend.Models.UsuarioModel;
+import com.massmotosperu.backend.Models.UsuarioRolModel;
 import com.massmotosperu.backend.Repositories.UsuarioRepository;
-import jakarta.mail.MessagingException;
+import com.massmotosperu.backend.Repositories.UsuarioRolRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
@@ -16,36 +16,60 @@ import java.util.Optional;
 public class UserService {
 
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioRolRepository usuarioRolRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
-    // Metodo para obtener al usuario por su id
-    public Optional<UsuarioModel> obtenerUsuarioPorId(int idUsuario) {
-        return usuarioRepository.findById(idUsuario);
-    }
-
     public UserService(UsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder,
-            EmailService emailService) {
+                       UsuarioRolRepository usuarioRolRepository,
+                       PasswordEncoder passwordEncoder,
+                       EmailService emailService) {
         this.usuarioRepository = usuarioRepository;
+        this.usuarioRolRepository = usuarioRolRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
     }
 
-    // Metodo para registrar a un usuario
+    // Método para asignar rol a un usuario
+    public void asignarRol(int usuarioId, int rolId) {
+        // Verificar que el usuario existe
+        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findById(usuarioId);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Usuario no encontrado para el ID: " + usuarioId);
+        }
+
+        // Verificar que el rol existe
+        // (si tienes un repositorio de roles, puedes validarlo aquí)
+        // Ejemplo: rolRepository.findById(rolId).orElseThrow(() -> ...);
+
+        UsuarioRolModel usuarioRol = new UsuarioRolModel(usuarioId, rolId, null, null);
+        usuarioRolRepository.save(usuarioRol);
+    }
+
+    // Registrar un nuevo usuario
     public UsuarioModel registrarUsuario(@Valid UsuarioModel usuario) {
+        // Verificar si el correo ya está registrado
         if (usuarioRepository.findByCorreoElectronico(usuario.getCorreoElectronico()).isPresent()) {
             throw new UsuarioYaExisteException(
                     "El correo electrónico ya está registrado: " + usuario.getCorreoElectronico());
         }
 
+        // Encriptar la contraseña antes de guardar
         usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
+
+        // Guardar el usuario en la base de datos
         UsuarioModel savedUser = usuarioRepository.save(usuario);
+
+        // Asignar rol por defecto (1: Usuario) al nuevo usuario
+        asignarRol(savedUser.getIdUsuario(), 1);
+
+        // Enviar correo de bienvenida
         enviarCorreoBienvenida(savedUser);
+
         return savedUser;
     }
 
-    // METODO PARA ENVIAR CORREO CUANDO SE REGISTRE UN USUARIO
+    // Enviar correo de bienvenida al usuario
     private void enviarCorreoBienvenida(UsuarioModel usuario) {
         String subject = "Bienvenido a Mass Motos";
         String templateName = "correo";
@@ -54,69 +78,33 @@ public class UserService {
 
         try {
             emailService.sendEmail(usuario.getCorreoElectronico(), subject, templateName, context);
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             System.err.println("Error al enviar el correo de bienvenida: " + e.getMessage());
         }
     }
 
-    // Metodo para enviar correo cuando se inicie sesion
-    public void enviarCorreoInicioSesionExitoso(UsuarioModel usuario) {
-        String subject = "Inicio de Sesión Exitoso";
-        String templateName = "correoLogin";
-        Context context = new Context();
-        context.setVariable("nombre", usuario.getNombre());
-
-        try {
-            emailService.sendEmail(usuario.getCorreoElectronico(), subject, templateName, context);
-        } catch (MessagingException e) {
-            System.err.println("Error al enviar el correo de inicio de sesión: " + e.getMessage());
-        }
-    }
-
-    // Metodo para validar usuario
+    // Verificar las credenciales del usuario
     public Optional<UsuarioModel> verificarUsuario(String correoElectronico, String contraseña) {
         Optional<UsuarioModel> usuario = usuarioRepository.findByCorreoElectronico(correoElectronico);
         if (usuario.isPresent() && passwordEncoder.matches(contraseña, usuario.get().getContraseña())) {
-            enviarCorreoInicioSesionExitoso(usuario.get());
             return usuario;
         }
         return Optional.empty();
     }
 
-    // Metodo para obtener el correo del usuario
-    public Optional<UsuarioModel> obtenerUsuarioPorCorreo(String correoElectronico) {
-        return usuarioRepository.findByCorreoElectronico(correoElectronico);
+    // Obtener un usuario por su ID
+    public Optional<UsuarioModel> obtenerUsuarioPorId(int idUsuario) {
+        return usuarioRepository.findById(idUsuario);
     }
 
-    // Metodo apra actualizar los datos del usuario usando DTO(DATA TRANSFER OBJECT)
-    public void actualizarDatosUsuario(Integer userId, ActualizacionDatosDTO datosDTO) {
-        UsuarioModel usuario = usuarioRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        usuario.setNombre(datosDTO.getNombre());
-        usuario.setApellidoPaterno(datosDTO.getApellidoPaterno());
-        usuario.setApellidoMaterno(datosDTO.getApellidoMaterno());
-        usuario.setCorreoElectronico(datosDTO.getCorreoElectronico());
-        usuario.setTelefono(datosDTO.getTelefono());
-        usuario.setEdad(datosDTO.getEdad()); 
-        usuario.setDni(datosDTO.getDni());
-        usuario.setPreNombre(datosDTO.getPreNombre());
-
-        if (datosDTO.getContraseña() != null && !datosDTO.getContraseña().isEmpty()) {
-            usuario.setContraseña(passwordEncoder.encode(datosDTO.getContraseña()));
-        }
-
+    // Actualizar datos del usuario
+    public void actualizarUsuario(UsuarioModel usuario) {
         usuarioRepository.save(usuario);
     }
 
-    // Metodo para actualziar contraseña
+    // Actualizar la contraseña del usuario
     public void actualizarContrasena(UsuarioModel usuario, String nuevaContrasena) {
         usuario.setContraseña(passwordEncoder.encode(nuevaContrasena));
-        usuarioRepository.save(usuario);
-    }
-
-    // Método agregado para guardar directamente el UsuarioModel
-    public void actualizarUsuario(UsuarioModel usuario) {
         usuarioRepository.save(usuario);
     }
 }

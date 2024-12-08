@@ -3,7 +3,10 @@ package com.massmotosperu.backend.Controllers;
 import com.massmotosperu.backend.DTOs.ActualizacionDatosDTO;
 import com.massmotosperu.backend.DTOs.LoginDTO;
 import com.massmotosperu.backend.Models.UsuarioModel;
+import com.massmotosperu.backend.Models.UsuarioRolModel;
+import com.massmotosperu.backend.Repositories.UsuarioRolRepository;
 import com.massmotosperu.backend.Services.UserService;
+import com.massmotosperu.backend.Utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,17 +22,23 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private JWTUtil jwtUtil;
+
+    @Autowired
+    private UsuarioRolRepository usuarioRolRepository; 
+
     @PostMapping("/register")
-    public ResponseEntity<String> registrar(@RequestBody UsuarioModel usuario) {
-        System.out.println("Datos recibidos: " + usuario);
-
-        if (usuario.getNombre() == null || usuario.getNombre().isEmpty()) {
-            return ResponseEntity.badRequest().body("El nombre es obligatorio");
-        }
-
+    public ResponseEntity<?> registrar(@RequestBody UsuarioModel usuario) {
         try {
-            userService.registrarUsuario(usuario);
-            return ResponseEntity.ok("Usuario registrado exitosamente");
+            UsuarioModel nuevoUsuario = userService.registrarUsuario(usuario); // Guarda el usuario en la BD
+
+            // Asignar rol 1 al nuevo usuario
+            userService.asignarRol(nuevoUsuario.getIdUsuario(), 1);
+
+            return ResponseEntity.ok(Map.of(
+                    "id", nuevoUsuario.getIdUsuario(),
+                    "mensaje", "Usuario registrado exitosamente"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error al registrar el usuario: " + e.getMessage());
         }
@@ -38,23 +47,41 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         try {
-            Optional<UsuarioModel> user = userService.verificarUsuario(loginDTO.getCorreoElectronico(), loginDTO.getContraseña());
+            Optional<UsuarioModel> user = userService.verificarUsuario(
+                    loginDTO.getCorreoElectronico(),
+                    loginDTO.getContraseña());
+
             if (user.isPresent()) {
-                // Crear un Map con los detalles del usuario (sin token)
-                Map<String, Object> response = Map.of(
-                        "userId", user.get().getIdUsuario(),
-                        "nombre", user.get().getNombre(),
-                        "apellidoPaterno", user.get().getApellidoPaterno(),
-                        "apellidoMaterno", user.get().getApellidoMaterno(),
-                        "correoElectronico", user.get().getCorreoElectronico(),
-                        "telefono", user.get().getTelefono(),
-                        "dni", user.get().getDni()
-                );
-                return ResponseEntity.ok(response);
+                UsuarioModel usuario = user.get();
+
+                // Obtener el rol del usuario (asumiendo un único rol)
+                Optional<UsuarioRolModel> usuarioRol = usuarioRolRepository.findByUsuarioID(usuario.getIdUsuario());
+                int idRol = usuarioRol.map(UsuarioRolModel::getRolID).orElseThrow(
+                        () -> new RuntimeException("Rol no encontrado para el usuario: " + usuario.getIdUsuario()));
+
+                // Generar el token JWT
+                String token = jwtUtil.generarToken(Map.of(
+                        "userId", usuario.getIdUsuario(),
+                        "nombre", usuario.getNombre(),
+                        "apellidoPaterno", usuario.getApellidoPaterno(),
+                        "apellidoMaterno", usuario.getApellidoMaterno(),
+                        "correoElectronico", usuario.getCorreoElectronico(),
+                        "telefono", usuario.getTelefono(),
+                        "dni", usuario.getDni(),
+                        "idRol", idRol));
+
+                // Responder con el token y datos del usuario
+                return ResponseEntity.ok(Map.of(
+                        "token", token,
+                        "userId", usuario.getIdUsuario(),
+                        "idRol", idRol,
+                        "nombre", usuario.getNombre(),
+                        "correoElectronico", usuario.getCorreoElectronico()));
             }
+
             return ResponseEntity.badRequest().body("Correo o contraseña incorrectos");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error al iniciar sesión");
+            return ResponseEntity.status(500).body("Error al iniciar sesión: " + e.getMessage());
         }
     }
 
@@ -65,7 +92,6 @@ public class AuthController {
             if (user.isPresent()) {
                 UsuarioModel usuario = user.get();
 
-                // Actualizar los datos del usuario usando el DTO
                 usuario.setNombre(datosDTO.getNombre());
                 usuario.setApellidoPaterno(datosDTO.getApellidoPaterno());
                 usuario.setApellidoMaterno(datosDTO.getApellidoMaterno());
@@ -74,12 +100,11 @@ public class AuthController {
                 usuario.setDni(datosDTO.getDni());
                 usuario.setPreNombre(datosDTO.getPreNombre());
 
-                // Si se envía una nueva contraseña, encripta y actualiza
                 if (datosDTO.getContraseña() != null && !datosDTO.getContraseña().isEmpty()) {
                     userService.actualizarContrasena(usuario, datosDTO.getContraseña());
                 }
 
-                userService.actualizarUsuario(usuario); // Guarda los cambios en la base de datos
+                userService.actualizarUsuario(usuario);
                 return ResponseEntity.ok("Datos del usuario actualizados exitosamente");
             }
             return ResponseEntity.status(404).body("Usuario no encontrado");

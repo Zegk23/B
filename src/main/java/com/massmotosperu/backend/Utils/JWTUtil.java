@@ -5,18 +5,19 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JWTUtil {
 
-    private Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    public String generarToken(String subject) {
+    public String generarToken(Map<String, Object> userClaims) {
         return Jwts.builder()
-                .setSubject(subject)
+                .setClaims(userClaims) // Agregar los datos del usuario como claims
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 día de duración
                 .signWith(key)
                 .compact();
     }
@@ -31,12 +32,11 @@ public class JWTUtil {
         }
     }
 
-    public String getSubject(String token) {
+    public Map<String, Object> getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
     }
 }

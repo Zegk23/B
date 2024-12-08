@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Table(name = "tb_rol")  
+@Table(name = "tb_roles")  
 @NoArgsConstructor
 @AllArgsConstructor
 public class RolModel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // ID autoincremental
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  
     @Column(name = "IDRol", updatable = false, nullable = false)
     private int idRol;
 

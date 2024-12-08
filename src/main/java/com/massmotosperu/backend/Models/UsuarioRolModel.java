@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Table(name = "tb_usuariorol")
+@Table(name = "tb_usuario_roles") 
 @IdClass(UsuarioRolId.class)
 @NoArgsConstructor
 @AllArgsConstructor

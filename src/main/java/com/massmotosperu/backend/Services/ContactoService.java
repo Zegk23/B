@@ -12,7 +12,6 @@ public class ContactoService {
     private ContactoRepository contactoRepository;
 
 
-    // Guardar la informacion de contacto en la DB
     public ContactoModel guardarContacto(ContactoModel contacto) {
         return contactoRepository.save(contacto);
     }

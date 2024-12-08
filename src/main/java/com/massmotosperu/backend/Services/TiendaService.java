@@ -13,7 +13,6 @@ public class TiendaService {
     @Autowired
     private SedeTiendaRepository sedeTiendaRepository;
 
-    // Listar todas las tiendas de la bd
     public List<SedeTiendaModel> listarTodasLasTiendas() {
         return sedeTiendaRepository.findAll();
     }
