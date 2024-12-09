@@ -32,15 +32,10 @@ public class UserService {
 
     // Método para asignar rol a un usuario
     public void asignarRol(int usuarioId, int rolId) {
-        // Verificar que el usuario existe
         Optional<UsuarioModel> usuarioOpt = usuarioRepository.findById(usuarioId);
         if (usuarioOpt.isEmpty()) {
             throw new RuntimeException("Usuario no encontrado para el ID: " + usuarioId);
         }
-
-        // Verificar que el rol existe
-        // (si tienes un repositorio de roles, puedes validarlo aquí)
-        // Ejemplo: rolRepository.findById(rolId).orElseThrow(() -> ...);
 
         UsuarioRolModel usuarioRol = new UsuarioRolModel(usuarioId, rolId, null, null);
         usuarioRolRepository.save(usuarioRol);
@@ -48,28 +43,23 @@ public class UserService {
 
     // Registrar un nuevo usuario
     public UsuarioModel registrarUsuario(@Valid UsuarioModel usuario) {
-        // Verificar si el correo ya está registrado
         if (usuarioRepository.findByCorreoElectronico(usuario.getCorreoElectronico()).isPresent()) {
             throw new UsuarioYaExisteException(
                     "El correo electrónico ya está registrado: " + usuario.getCorreoElectronico());
         }
 
-        // Encriptar la contraseña antes de guardar
         usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
 
-        // Guardar el usuario en la base de datos
         UsuarioModel savedUser = usuarioRepository.save(usuario);
 
-        // Asignar rol por defecto (1: Usuario) al nuevo usuario
         asignarRol(savedUser.getIdUsuario(), 1);
 
-        // Enviar correo de bienvenida
         enviarCorreoBienvenida(savedUser);
 
         return savedUser;
     }
 
-    // Enviar correo de bienvenida al usuario
+    // Enviar correo de bienvenida
     private void enviarCorreoBienvenida(UsuarioModel usuario) {
         String subject = "Bienvenido a Mass Motos";
         String templateName = "correo";
@@ -83,7 +73,20 @@ public class UserService {
         }
     }
 
-    // Verificar las credenciales del usuario
+    // Enviar correo al iniciar sesión
+    public void enviarCorreoInicioSesion(UsuarioModel usuario) {
+        String subject = "Inicio de Sesión en Mass Motos";
+        String templateName = "correoLogin";
+        Context context = new Context();
+        context.setVariable("nombre", usuario.getNombre());
+
+        try {
+            emailService.sendEmail(usuario.getCorreoElectronico(), subject, templateName, context);
+        } catch (Exception e) {
+            System.err.println("Error al enviar el correo de inicio de sesión: " + e.getMessage());
+        }
+    }
+
     public Optional<UsuarioModel> verificarUsuario(String correoElectronico, String contraseña) {
         Optional<UsuarioModel> usuario = usuarioRepository.findByCorreoElectronico(correoElectronico);
         if (usuario.isPresent() && passwordEncoder.matches(contraseña, usuario.get().getContraseña())) {
@@ -92,17 +95,14 @@ public class UserService {
         return Optional.empty();
     }
 
-    // Obtener un usuario por su ID
     public Optional<UsuarioModel> obtenerUsuarioPorId(int idUsuario) {
         return usuarioRepository.findById(idUsuario);
     }
 
-    // Actualizar datos del usuario
     public void actualizarUsuario(UsuarioModel usuario) {
         usuarioRepository.save(usuario);
     }
 
-    // Actualizar la contraseña del usuario
     public void actualizarContrasena(UsuarioModel usuario, String nuevaContrasena) {
         usuario.setContraseña(passwordEncoder.encode(nuevaContrasena));
         usuarioRepository.save(usuario);

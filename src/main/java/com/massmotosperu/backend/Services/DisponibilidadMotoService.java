@@ -20,8 +20,7 @@ public class DisponibilidadMotoService {
     private SedeTiendaRepository sedeTiendaRepository;
 
     public List<SedeTiendaModel> getTiendasDisponiblesPorMoto(Integer idMoto) {
-        List<DisponibilidadMotoModel> disponibilidad = disponibilidadMotoRepository.findByIdMoto(idMoto);
-        return disponibilidad.stream()
+        return disponibilidadMotoRepository.findByIdMoto(idMoto).stream()
                 .map(d -> sedeTiendaRepository.findById(d.getIdTienda()).orElse(null))
                 .filter(tienda -> tienda != null)
                 .collect(Collectors.toList());

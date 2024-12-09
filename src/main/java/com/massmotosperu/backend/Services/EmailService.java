@@ -19,7 +19,6 @@ public class EmailService {
     @Autowired
     private TemplateEngine templateEngine;
 
-    // Metodo para enviar correos electronicos
     public void sendEmail(String to, String subject, String templateName, Context context) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

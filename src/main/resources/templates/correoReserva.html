@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Reserva de Moto en Mass Motos</title>
+    <title>Reserva Confirmada - Mass Motos</title>
     <style>
         /* Centrando y estilizando la página */
         body {
@@ -12,7 +12,7 @@
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #f9f9f9;
         }
 
         .container {
@@ -20,22 +20,28 @@
             width: 100%;
             max-width: 500px;
             padding: 20px;
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 26px;
             color: #333;
+            margin-bottom: 10px;
         }
 
         h2 {
             font-size: 20px;
             color: #555;
+            margin-top: 20px;
         }
 
         p {
             font-size: 16px;
             color: #666;
             margin: 10px 0;
+            line-height: 1.5;
         }
 
         .button {
@@ -43,14 +49,20 @@
             margin-top: 20px;
             padding: 10px 20px;
             color: #fff;
-            background-color: red;
+            background-color: #007bff;
             text-decoration: none;
             border-radius: 4px;
             font-size: 16px;
         }
 
         .button:hover {
-            background-color: red;
+            background-color: #0056b3;
+        }
+
+        img {
+            margin-top: 20px;
+            max-width: 100px;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -61,16 +73,16 @@
         <p>Nos complace informarte que tu reserva en Mass Motos ha sido confirmada con éxito.</p>
         
         <h2>Detalles de la Reserva</h2>
-        <p><strong>Nombre de la Moto:</strong> <span th:text="${motoNombre}">Nombre de la moto</span></p>
-        <p><strong>Modelo de la Moto:</strong> <span th:text="${motoModelo}">Modelo de la moto</span></p>
+        <p><strong>Nombre de la Moto:</strong> <span th:text="${motoNombre}">[Nombre de la moto]</span></p>
+        <p><strong>Modelo de la Moto:</strong> <span th:text="${motoModelo}">[Modelo de la moto]</span></p>
         <p><strong>Fecha de la Reserva:</strong> <span th:text="${fechaReserva}">Fecha de reserva</span></p>
 
-        
+
         <p>Si tienes alguna pregunta o necesitas más información, no dudes en contactarnos.</p>
         
         <a href="http://localhost:3000" class="button">Visítanos para más detalles</a>
-        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgtu6QN0jftYBCMEolQjIgI7nwOzyypiW76XgMUFFvna5Dg5HQ7rjvRwc7my-jO-UrgLqDaJ-LruxiaBZd-K4F_uGHbBb5viorUHa_bYTjQ8xLWhaLIbfjC-LDSnV3ooY0lMxY7VBnuiPelxlFv0_pG5Oil4zjuWJhp6Ivs13DbGNXetv5dDvr6-bX16zTW/s320/eHS-1ebx4o_2J-JNS61v8-transformed.webp" alt="">
-        
+
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgtu6QN0jftYBCMEolQjIgI7nwOzyypiW76XgMUFFvna5Dg5HQ7rjvRwc7my-jO-UrgLqDaJ-LruxiaBZd-K4F_uGHbBb5viorUHa_bYTjQ8xLWhaLIbfjC-LDSnV3ooY0lMxY7VBnuiPelxlFv0_pG5Oil4zjuWJhp6Ivs13DbGNXetv5dDvr6-bX16zTW/s320/eHS-1ebx4o_2J-JNS61v8-transformed.webp" alt="Logo de Mass Motos">
     </div>
 </body>
 </html>

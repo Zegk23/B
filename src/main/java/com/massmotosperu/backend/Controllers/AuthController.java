@@ -26,14 +26,13 @@ public class AuthController {
     private JWTUtil jwtUtil;
 
     @Autowired
-    private UsuarioRolRepository usuarioRolRepository; 
+    private UsuarioRolRepository usuarioRolRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registrar(@RequestBody UsuarioModel usuario) {
         try {
-            UsuarioModel nuevoUsuario = userService.registrarUsuario(usuario); // Guarda el usuario en la BD
+            UsuarioModel nuevoUsuario = userService.registrarUsuario(usuario);
 
-            // Asignar rol 1 al nuevo usuario
             userService.asignarRol(nuevoUsuario.getIdUsuario(), 1);
 
             return ResponseEntity.ok(Map.of(
@@ -54,29 +53,23 @@ public class AuthController {
             if (user.isPresent()) {
                 UsuarioModel usuario = user.get();
 
-                // Obtener el rol del usuario (asumiendo un único rol)
                 Optional<UsuarioRolModel> usuarioRol = usuarioRolRepository.findByUsuarioID(usuario.getIdUsuario());
                 int idRol = usuarioRol.map(UsuarioRolModel::getRolID).orElseThrow(
                         () -> new RuntimeException("Rol no encontrado para el usuario: " + usuario.getIdUsuario()));
 
-                // Generar el token JWT
                 String token = jwtUtil.generarToken(Map.of(
                         "userId", usuario.getIdUsuario(),
                         "nombre", usuario.getNombre(),
-                        "apellidoPaterno", usuario.getApellidoPaterno(),
-                        "apellidoMaterno", usuario.getApellidoMaterno(),
                         "correoElectronico", usuario.getCorreoElectronico(),
-                        "telefono", usuario.getTelefono(),
-                        "dni", usuario.getDni(),
                         "idRol", idRol));
 
-                // Responder con el token y datos del usuario
+                userService.enviarCorreoInicioSesion(usuario);
+
                 return ResponseEntity.ok(Map.of(
                         "token", token,
                         "userId", usuario.getIdUsuario(),
                         "idRol", idRol,
-                        "nombre", usuario.getNombre(),
-                        "correoElectronico", usuario.getCorreoElectronico()));
+                        "nombre", usuario.getNombre()));
             }
 
             return ResponseEntity.badRequest().body("Correo o contraseña incorrectos");
@@ -109,7 +102,6 @@ public class AuthController {
             }
             return ResponseEntity.status(404).body("Usuario no encontrado");
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(500).body("Error al actualizar los datos del usuario");
         }
     }

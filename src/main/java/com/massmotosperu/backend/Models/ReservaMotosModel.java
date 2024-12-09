@@ -42,4 +42,7 @@ public class ReservaMotosModel {
     @JoinColumn(name = "IDUsuario", referencedColumnName = "IDUsuario", nullable = false)
     private UsuarioModel usuario;
 
+    @Column(nullable = false)
+    private String estado = "PENDIENTE"; // Valor predeterminado
+    
 }
