@@ -8,16 +8,20 @@ import com.massmotosperu.backend.Repositories.ReservaMotosRepository;
 import com.massmotosperu.backend.Repositories.MotoRepository;
 import com.massmotosperu.backend.Repositories.SedeTiendaRepository;
 import com.massmotosperu.backend.Repositories.UsuarioRepository;
+import com.massmotosperu.backend.Exceptions.*;
 
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 import org.thymeleaf.context.Context;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservaService {
@@ -39,62 +43,103 @@ public class ReservaService {
 
     public ReservaMotosModel crearReserva(int idMoto, String idTienda, int idUsuario, String fechaReserva)
             throws ParseException {
-        Optional<MotoModel> motoOpt = motoRepository.findById(idMoto);
-        Optional<SedeTiendaModel> tiendaOpt = sedeTiendaRepository.findById(Integer.parseInt(idTienda));
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findById(idUsuario);
+        MotoModel moto = motoRepository.findById(idMoto)
+                .orElseThrow(() -> new MotoNoEncontradaException("La moto con ID " + idMoto + " no fue encontrada."));
+        SedeTiendaModel tienda = sedeTiendaRepository.findById(Integer.parseInt(idTienda))
+                .orElseThrow(() -> new TiendaNoEncontradaException("La tienda con ID " + idTienda + " no fue encontrada."));
+        UsuarioModel usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new UsuarioNoEncontradoException(
+                        "El usuario con ID " + idUsuario + " no fue encontrado."));
 
-        if (motoOpt.isPresent() && tiendaOpt.isPresent() && usuarioOpt.isPresent()) {
-            boolean reservaExistente = reservaMotosRepository.existsByMotoAndTiendaAndEstado(
-                    motoOpt.get(), tiendaOpt.get(), "PENDIENTE");
-
-            if (reservaExistente) {
-                throw new RuntimeException("Esta moto ya está reservada en la tienda seleccionada.");
-            }
-
-            ReservaMotosModel reserva = new ReservaMotosModel();
-            reserva.setMoto(motoOpt.get());
-            reserva.setTienda(tiendaOpt.get());
-            reserva.setUsuario(usuarioOpt.get());
-            reserva.setEstado("PENDIENTE");
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Date parsedDate = dateFormat.parse(fechaReserva);
-            reserva.setFecha(parsedDate);
-
-            ReservaMotosModel reservaGuardada = reservaMotosRepository.save(reserva);
-            enviarCorreoConfirmacionReserva(reservaGuardada);
-
-            return reservaGuardada;
-        } else {
-            throw new RuntimeException("Moto, Tienda o Usuario no encontrado");
+        if (reservaMotosRepository.existsByMotoAndTiendaAndEstado(moto, tienda, "PENDIENTE")) {
+            throw new MotoYaReservadaException("Esta moto ya está reservada en la tienda seleccionada.");
         }
+
+        ReservaMotosModel reserva = new ReservaMotosModel();
+        reserva.setMoto(moto);
+        reserva.setTienda(tienda);
+        reserva.setUsuario(usuario);
+        reserva.setEstado("PENDIENTE");
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date parsedDate = dateFormat.parse(fechaReserva);
+        reserva.setFecha(parsedDate);
+
+        ReservaMotosModel reservaGuardada = reservaMotosRepository.save(reserva);
+        enviarCorreoConfirmacionReserva(reservaGuardada);
+
+        return reservaGuardada;
+    }
+
+    public void cancelarReserva(int idReserva) {
+        ReservaMotosModel reserva = reservaMotosRepository.findById(idReserva)
+                .orElseThrow(() -> new IDReservaNoEncontradaException(
+                        "La reserva con ID " + idReserva + " no fue encontrada."));
+
+        // Actualizar estado de la reserva
+        reserva.setEstado("CANCELADO");
+
+        // Actualizar disponibilidad de la moto asociada
+        MotoModel moto = reserva.getMoto();
+        moto.setDisponibilidad("Disponible");
+        motoRepository.save(moto);
+
+        // Guardar la reserva con el nuevo estado
+        reservaMotosRepository.save(reserva);
+    }
+
+    public List<ReservaMotosModel> obtenerReservasPorUsuario(int idUsuario) {
+        UsuarioModel usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new UsuarioNoEncontradoException(
+                        "El usuario con ID " + idUsuario + " no fue encontrado."));
+
+        return reservaMotosRepository.findByUsuario(usuario);
+    }
+
+    public List<ReservaMotosModel> listarTodasLasReservas() {
+        List<ReservaMotosModel> reservas = reservaMotosRepository.findAll();
+        if (reservas.isEmpty()) {
+            throw new DatosNoDisponiblesException("No hay reservas registradas.");
+        }
+        return reservas;
+    }
+
+    public void actualizarEstado(int idReserva, String nuevoEstado) {
+        ReservaMotosModel reserva = reservaMotosRepository.findById(idReserva)
+                .orElseThrow(() -> new IDReservaNoEncontradaException(
+                        "La reserva con ID " + idReserva + " no fue encontrada."));
+
+        reserva.setEstado(nuevoEstado);
+        reservaMotosRepository.save(reserva);
     }
 
     private void enviarCorreoConfirmacionReserva(ReservaMotosModel reserva) {
         String subject = "Confirmación de Reserva - Mass Motos";
         String templateName = "correoReserva";
-    
+
         Context context = new Context();
         context.setVariable("usuarioNombreCompleto", reserva.getUsuario().getNombre() + " " +
                 reserva.getUsuario().getApellidoPaterno() + " " +
                 reserva.getUsuario().getApellidoMaterno());
         context.setVariable("motoNombre", reserva.getMoto().getNombreMoto());
         context.setVariable("motoModelo", reserva.getMoto().getModeloMoto());
-    
-        // Formatear la fecha en el backend
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String fechaFormateada = dateFormat.format(reserva.getFecha());
         context.setVariable("fechaReserva", fechaFormateada);
-    
+
         try {
             emailService.sendEmail(reserva.getUsuario().getCorreoElectronico(), subject, templateName, context);
         } catch (MessagingException e) {
-            System.err.println("Error al enviar el correo de confirmación de reserva: " + e.getMessage());
+            throw new ErrorEnvioCorreoException("Error al enviar el correo de confirmación: " + e.getMessage());
         }
     }
-    
 
-    private void enviarCorreoCancelacionReserva(ReservaMotosModel reserva) {
+    public void enviarCorreoCancelacion(int idReserva) {
+        ReservaMotosModel reserva = reservaMotosRepository.findById(idReserva)
+                .orElseThrow(() -> new IDReservaNoEncontradaException(
+                        "La reserva con ID " + idReserva + " no fue encontrada."));
+
         String subject = "Cancelación de Reserva - Mass Motos";
         String templateName = "correoReservaCancelada";
 
@@ -104,81 +149,36 @@ public class ReservaService {
                 reserva.getUsuario().getApellidoMaterno());
         context.setVariable("motoNombre", reserva.getMoto().getNombreMoto());
         context.setVariable("motoModelo", reserva.getMoto().getModeloMoto());
-        context.setVariable("fechaReserva", reserva.getFecha().toString());
+        context.setVariable("fechaReserva", new SimpleDateFormat("yyyy-MM-dd").format(reserva.getFecha()));
 
         try {
             emailService.sendEmail(reserva.getUsuario().getCorreoElectronico(), subject, templateName, context);
         } catch (MessagingException e) {
-            System.err.println("Error al enviar el correo de cancelación de reserva: " + e.getMessage());
+            throw new ErrorEnvioCorreoException("Error al enviar el correo de cancelación: " + e.getMessage());
         }
     }
 
-    public List<ReservaMotosModel> obtenerReservasPorUsuario(int idUsuario) {
-        Optional<UsuarioModel> usuarioOpt = usuarioRepository.findById(idUsuario);
-        if (usuarioOpt.isPresent()) {
-            return reservaMotosRepository.findByUsuario(usuarioOpt.get());
-        } else {
-            throw new RuntimeException("Usuario no encontrado");
-        }
+   public List<Map<String, Object>> obtenerReservasYEstadosPorUsuario(int idUsuario) {
+    UsuarioModel usuario = usuarioRepository.findById(idUsuario)
+            .orElseThrow(() -> new UsuarioNoEncontradoException(
+                    "El usuario con ID " + idUsuario + " no fue encontrado."));
+
+    List<ReservaMotosModel> reservas = reservaMotosRepository.findByUsuario(usuario);
+
+    if (reservas.isEmpty()) {
+        throw new DatosNoDisponiblesException("No hay reservas registradas para el usuario.");
     }
 
-    public void cancelarReserva(int idReserva) {
-        Optional<ReservaMotosModel> reservaOpt = reservaMotosRepository.findById(idReserva);
-        if (reservaOpt.isPresent()) {
-            ReservaMotosModel reserva = reservaOpt.get();
-            reserva.setEstado("CANCELADO");
+    // Mapeamos cada reserva para incluir el estado y otros detalles
+    return reservas.stream().map(reserva -> {
+        Map<String, Object> reservaMap = new HashMap<>();
+        reservaMap.put("idReserva", reserva.getIdReserva());
+        reservaMap.put("estado", reserva.getEstado());
+        reservaMap.put("fechaReserva", reserva.getFecha().toString());
+        reservaMap.put("motoNombre", reserva.getMoto().getNombreMoto());
+        reservaMap.put("tiendaNombre", reserva.getTienda().getNombreTienda());
+        return reservaMap;
+    }).collect(Collectors.toList());
+}
 
-            MotoModel moto = reserva.getMoto();
-            moto.setDisponibilidad("Disponible");
-            motoRepository.save(moto);
-
-            reservaMotosRepository.save(reserva);
-
-            enviarCorreoCancelacionReserva(reserva);
-        } else {
-            throw new RuntimeException("Reserva no encontrada");
-        }
-    }
-
-    public void actualizarEstado(int idReserva, String nuevoEstado) {
-        Optional<ReservaMotosModel> reservaOpt = reservaMotosRepository.findById(idReserva);
-        if (reservaOpt.isPresent()) {
-            ReservaMotosModel reserva = reservaOpt.get();
-            reserva.setEstado(nuevoEstado);
-            reservaMotosRepository.save(reserva);
-        } else {
-            throw new RuntimeException("Reserva no encontrada");
-        }
-    }
-
-    public List<ReservaMotosModel> listarTodasLasReservas() {
-        return reservaMotosRepository.findAll();
-    }
-
-    public void enviarCorreoCancelacion(int idReserva) {
-        Optional<ReservaMotosModel> reservaOpt = reservaMotosRepository.findById(idReserva);
-        if (reservaOpt.isPresent()) {
-            ReservaMotosModel reserva = reservaOpt.get();
-    
-            String subject = "Cancelación de Reserva - Mass Motos";
-            String templateName = "correoReservaCancelada";
-    
-            Context context = new Context();
-            context.setVariable("usuarioNombreCompleto", reserva.getUsuario().getNombre() + " " +
-                    reserva.getUsuario().getApellidoPaterno() + " " +
-                    reserva.getUsuario().getApellidoMaterno());
-            context.setVariable("motoNombre", reserva.getMoto().getNombreMoto());
-            context.setVariable("motoModelo", reserva.getMoto().getModeloMoto());
-            context.setVariable("fechaReserva", new SimpleDateFormat("yyyy-MM-dd").format(reserva.getFecha()));
-    
-            try {
-                emailService.sendEmail(reserva.getUsuario().getCorreoElectronico(), subject, templateName, context);
-            } catch (MessagingException e) {
-                throw new RuntimeException("Error al enviar el correo de cancelación: " + e.getMessage());
-            }
-        } else {
-            throw new RuntimeException("Reserva no encontrada para el ID: " + idReserva);
-        }
-    }
-    
 }

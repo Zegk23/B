@@ -1,6 +1,8 @@
 package com.massmotosperu.backend.Services;
 
+import com.massmotosperu.backend.Exceptions.UsuarioNoEncontradoException;
 import com.massmotosperu.backend.Exceptions.UsuarioYaExisteException;
+import com.massmotosperu.backend.Exceptions.CredencialesInvalidasException;
 import com.massmotosperu.backend.Models.UsuarioModel;
 import com.massmotosperu.backend.Models.UsuarioRolModel;
 import com.massmotosperu.backend.Repositories.UsuarioRepository;
@@ -34,7 +36,7 @@ public class UserService {
     public void asignarRol(int usuarioId, int rolId) {
         Optional<UsuarioModel> usuarioOpt = usuarioRepository.findById(usuarioId);
         if (usuarioOpt.isEmpty()) {
-            throw new RuntimeException("Usuario no encontrado para el ID: " + usuarioId);
+            throw new UsuarioNoEncontradoException("Usuario no encontrado para el ID: " + usuarioId);
         }
 
         UsuarioRolModel usuarioRol = new UsuarioRolModel(usuarioId, rolId, null, null);
@@ -89,21 +91,30 @@ public class UserService {
 
     public Optional<UsuarioModel> verificarUsuario(String correoElectronico, String contraseña) {
         Optional<UsuarioModel> usuario = usuarioRepository.findByCorreoElectronico(correoElectronico);
-        if (usuario.isPresent() && passwordEncoder.matches(contraseña, usuario.get().getContraseña())) {
-            return usuario;
+        if (usuario.isEmpty() || !passwordEncoder.matches(contraseña, usuario.get().getContraseña())) {
+            throw new CredencialesInvalidasException("Correo electrónico o contraseña incorrectos.");
         }
-        return Optional.empty();
+        return usuario;
     }
 
     public Optional<UsuarioModel> obtenerUsuarioPorId(int idUsuario) {
-        return usuarioRepository.findById(idUsuario);
+        return usuarioRepository.findById(idUsuario)
+                .or(() -> {
+                    throw new UsuarioNoEncontradoException("Usuario no encontrado para el ID: " + idUsuario);
+                });
     }
 
     public void actualizarUsuario(UsuarioModel usuario) {
+        if (!usuarioRepository.existsById(usuario.getIdUsuario())) {
+            throw new UsuarioNoEncontradoException("Usuario no encontrado para el ID: " + usuario.getIdUsuario());
+        }
         usuarioRepository.save(usuario);
     }
 
     public void actualizarContrasena(UsuarioModel usuario, String nuevaContrasena) {
+        if (!usuarioRepository.existsById(usuario.getIdUsuario())) {
+            throw new UsuarioNoEncontradoException("Usuario no encontrado para el ID: " + usuario.getIdUsuario());
+        }
         usuario.setContraseña(passwordEncoder.encode(nuevaContrasena));
         usuarioRepository.save(usuario);
     }

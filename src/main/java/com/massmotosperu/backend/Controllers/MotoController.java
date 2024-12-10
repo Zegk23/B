@@ -1,6 +1,7 @@
 package com.massmotosperu.backend.Controllers;
 
 import com.massmotosperu.backend.Models.MotoModel;
+import com.massmotosperu.backend.Services.DisponibilidadMotoService;
 import com.massmotosperu.backend.Services.MotoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,8 @@ public class MotoController {
 
     @Autowired
     private MotoService motoService;
+    @Autowired
+    private DisponibilidadMotoService disponibilidadMotoService;
 
     @GetMapping("/listarMotos")
     public ResponseEntity<List<MotoModel>> listarMotos() {
@@ -33,7 +36,8 @@ public class MotoController {
     @GetMapping("/disponibilidad/{id}")
     public ResponseEntity<?> obtenerDetalleCompletoDisponibilidad(@PathVariable Integer id) {
         try {
-            Map<String, Object> detalleCompleto = motoService.obtenerDetalleCompletoDisponibilidadMoto(id);
+            Map<String, Object> detalleCompleto = disponibilidadMotoService
+                    .obtenerDetalleCompletoDisponibilidadMoto(id);
             return ResponseEntity.ok(detalleCompleto);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));

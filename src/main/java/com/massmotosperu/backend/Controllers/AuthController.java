@@ -49,35 +49,44 @@ public class AuthController {
             Optional<UsuarioModel> user = userService.verificarUsuario(
                     loginDTO.getCorreoElectronico(),
                     loginDTO.getContraseña());
-
+    
             if (user.isPresent()) {
                 UsuarioModel usuario = user.get();
-
+    
                 Optional<UsuarioRolModel> usuarioRol = usuarioRolRepository.findByUsuarioID(usuario.getIdUsuario());
                 int idRol = usuarioRol.map(UsuarioRolModel::getRolID).orElseThrow(
                         () -> new RuntimeException("Rol no encontrado para el usuario: " + usuario.getIdUsuario()));
-
+    
                 String token = jwtUtil.generarToken(Map.of(
                         "userId", usuario.getIdUsuario(),
                         "nombre", usuario.getNombre(),
+                        "preNombre", usuario.getPreNombre(),
+                        "apellidoPaterno", usuario.getApellidoPaterno(),
+                        "apellidoMaterno", usuario.getApellidoMaterno(),
+                        "dni", usuario.getDni(),
+                        "telefono", usuario.getTelefono(),
                         "correoElectronico", usuario.getCorreoElectronico(),
                         "idRol", idRol));
-
+    
                 userService.enviarCorreoInicioSesion(usuario);
-
+    
                 return ResponseEntity.ok(Map.of(
                         "token", token,
                         "userId", usuario.getIdUsuario(),
                         "idRol", idRol,
-                        "nombre", usuario.getNombre()));
+                        "nombre", usuario.getNombre(),
+                        "preNombre", usuario.getPreNombre(),
+                        "apellidoPaterno", usuario.getApellidoPaterno(),
+                        "apellidoMaterno", usuario.getApellidoMaterno()
+                ));
             }
-
+    
             return ResponseEntity.badRequest().body("Correo o contraseña incorrectos");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error al iniciar sesión: " + e.getMessage());
         }
     }
-
+    
     @PutMapping("/update/{userId}")
     public ResponseEntity<?> actualizarUsuario(@PathVariable int userId, @RequestBody ActualizacionDatosDTO datosDTO) {
         try {

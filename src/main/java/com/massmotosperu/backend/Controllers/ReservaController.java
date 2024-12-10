@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.massmotosperu.backend.DTOs.ReservaDTO;
+import com.massmotosperu.backend.Exceptions.IDReservaNoEncontradaException;
+import com.massmotosperu.backend.Exceptions.UsuarioNoEncontradoException;
+
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +35,16 @@ public class ReservaController {
         return reservaService.obtenerReservasPorUsuario(idUsuario);
     }
 
-    @DeleteMapping("/cancelar/{idReserva}")
-    public void cancelarReserva(@PathVariable int idReserva) {
-        reservaService.cancelarReserva(idReserva);
+    @PutMapping("/cancelar/{idReserva}")
+    public ResponseEntity<?> cancelarReserva(@PathVariable int idReserva) {
+        try {
+            reservaService.cancelarReserva(idReserva);
+            return ResponseEntity.ok("Reserva cancelada correctamente.");
+        } catch (IDReservaNoEncontradaException e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error interno: " + e.getMessage());
+        }
     }
 
     @GetMapping("/listarTodas")
@@ -57,6 +67,18 @@ public class ReservaController {
             return ResponseEntity.ok("Correo de cancelación enviado con éxito.");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error al enviar el correo de cancelación: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/usuario/{idUsuario}/reservas")
+    public ResponseEntity<?> obtenerReservasYEstadosPorUsuario(@PathVariable int idUsuario) {
+        try {
+            List<Map<String, Object>> reservas = reservaService.obtenerReservasYEstadosPorUsuario(idUsuario);
+            return ResponseEntity.ok(reservas);
+        } catch (UsuarioNoEncontradoException e) {
+            return ResponseEntity.status(404).body("Usuario no encontrado: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al obtener las reservas: " + e.getMessage());
         }
     }
 

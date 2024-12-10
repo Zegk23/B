@@ -25,7 +25,11 @@ public interface MotoRepository extends JpaRepository<MotoModel, Integer> {
             "GROUP BY m.marcaMoto " +
             "ORDER BY COUNT(r) DESC")
     List<Object[]> countReservasPorMarca();
+
     @Query("SELECT DISTINCT m.marcaMoto FROM MotoModel m")
     List<String> findAllDistinctMarcas();
+
+    @Query("SELECT COUNT(m) FROM MotoModel m WHERE m.estadoMoto = :estado")
+    long countByEstado(@Param("estado") String estado);
     
 }

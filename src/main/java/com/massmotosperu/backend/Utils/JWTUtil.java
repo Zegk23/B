@@ -15,12 +15,13 @@ public class JWTUtil {
 
     public String generarToken(Map<String, Object> userClaims) {
         return Jwts.builder()
-                .setClaims(userClaims) // Agregar los datos del usuario como claims
+                .setClaims(userClaims)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 día de duración
                 .signWith(key)
                 .compact();
     }
+    
 
     public boolean validarToken(String token) {
         try {
