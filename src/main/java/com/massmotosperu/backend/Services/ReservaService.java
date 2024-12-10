@@ -76,16 +76,14 @@ public class ReservaService {
                 .orElseThrow(() -> new IDReservaNoEncontradaException(
                         "La reserva con ID " + idReserva + " no fue encontrada."));
 
-        // Actualizar estado de la reserva
         reserva.setEstado("CANCELADO");
 
-        // Actualizar disponibilidad de la moto asociada
         MotoModel moto = reserva.getMoto();
         moto.setDisponibilidad("Disponible");
         motoRepository.save(moto);
 
-        // Guardar la reserva con el nuevo estado
         reservaMotosRepository.save(reserva);
+        enviarCorreoCancelacion(idReserva);
     }
 
     public List<ReservaMotosModel> obtenerReservasPorUsuario(int idUsuario) {
@@ -169,7 +167,6 @@ public class ReservaService {
         throw new DatosNoDisponiblesException("No hay reservas registradas para el usuario.");
     }
 
-    // Mapeamos cada reserva para incluir el estado y otros detalles
     return reservas.stream().map(reserva -> {
         Map<String, Object> reservaMap = new HashMap<>();
         reservaMap.put("idReserva", reserva.getIdReserva());

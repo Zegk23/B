@@ -1,6 +1,5 @@
 package com.massmotosperu.backend.Services;
 
-import com.massmotosperu.backend.Exceptions.MotoNoDisponibleException;
 import com.massmotosperu.backend.Exceptions.MotoNoEncontradaException;
 import com.massmotosperu.backend.Exceptions.TiendaNoEncontradaException;
 import com.massmotosperu.backend.Models.MotoModel;
