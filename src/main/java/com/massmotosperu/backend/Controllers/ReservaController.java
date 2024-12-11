@@ -70,6 +70,26 @@ public class ReservaController {
         }
     }
 
+    @PostMapping("/enviarCorreoPendiente/{idReserva}")
+    public ResponseEntity<?> enviarCorreoPendiente(@PathVariable int idReserva) {
+        try {
+            reservaService.enviarCorreoPendiente(idReserva);
+            return ResponseEntity.ok("Correo de estado pendiente enviado con éxito.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al enviar el correo de estado pendiente: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/enviarCorreoCompletado/{idReserva}")
+    public ResponseEntity<?> enviarCorreoCompletado(@PathVariable int idReserva) {
+        try {
+            reservaService.enviarCorreoCompletado(idReserva);
+            return ResponseEntity.ok("Correo de estado completado enviado con éxito.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al enviar el correo de estado completado: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/usuario/{idUsuario}/reservas")
     public ResponseEntity<?> obtenerReservasYEstadosPorUsuario(@PathVariable int idUsuario) {
         try {

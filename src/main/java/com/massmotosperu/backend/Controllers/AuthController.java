@@ -49,14 +49,14 @@ public class AuthController {
             Optional<UsuarioModel> user = userService.verificarUsuario(
                     loginDTO.getCorreoElectronico(),
                     loginDTO.getContraseña());
-    
+
             if (user.isPresent()) {
                 UsuarioModel usuario = user.get();
-    
+
                 Optional<UsuarioRolModel> usuarioRol = usuarioRolRepository.findByUsuarioID(usuario.getIdUsuario());
                 int idRol = usuarioRol.map(UsuarioRolModel::getRolID).orElseThrow(
                         () -> new RuntimeException("Rol no encontrado para el usuario: " + usuario.getIdUsuario()));
-    
+
                 String token = jwtUtil.generarToken(Map.of(
                         "userId", usuario.getIdUsuario(),
                         "nombre", usuario.getNombre(),
@@ -67,9 +67,9 @@ public class AuthController {
                         "telefono", usuario.getTelefono(),
                         "correoElectronico", usuario.getCorreoElectronico(),
                         "idRol", idRol));
-    
+
                 userService.enviarCorreoInicioSesion(usuario);
-    
+
                 return ResponseEntity.ok(Map.of(
                         "token", token,
                         "userId", usuario.getIdUsuario(),
@@ -77,16 +77,15 @@ public class AuthController {
                         "nombre", usuario.getNombre(),
                         "preNombre", usuario.getPreNombre(),
                         "apellidoPaterno", usuario.getApellidoPaterno(),
-                        "apellidoMaterno", usuario.getApellidoMaterno()
-                ));
+                        "apellidoMaterno", usuario.getApellidoMaterno()));
             }
-    
+
             return ResponseEntity.badRequest().body("Correo o contraseña incorrectos");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error al iniciar sesión: " + e.getMessage());
         }
     }
-    
+
     @PutMapping("/update/{userId}")
     public ResponseEntity<?> actualizarUsuario(@PathVariable int userId, @RequestBody ActualizacionDatosDTO datosDTO) {
         try {
@@ -95,17 +94,12 @@ public class AuthController {
                 UsuarioModel usuario = user.get();
 
                 usuario.setNombre(datosDTO.getNombre());
-                usuario.setApellidoPaterno(datosDTO.getApellidoPaterno());
-                usuario.setApellidoMaterno(datosDTO.getApellidoMaterno());
+                usuario.setPreNombre(datosDTO.getPreNombre());
                 usuario.setCorreoElectronico(datosDTO.getCorreoElectronico());
                 usuario.setTelefono(datosDTO.getTelefono());
                 usuario.setDni(datosDTO.getDni());
-                usuario.setPreNombre(datosDTO.getPreNombre());
 
-                if (datosDTO.getContraseña() != null && !datosDTO.getContraseña().isEmpty()) {
-                    userService.actualizarContrasena(usuario, datosDTO.getContraseña());
-                }
-
+                // No modificar la contraseña
                 userService.actualizarUsuario(usuario);
                 return ResponseEntity.ok("Datos del usuario actualizados exitosamente");
             }

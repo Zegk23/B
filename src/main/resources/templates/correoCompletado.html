@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Reserva Confirmada - Mass Motos</title>
+    <title>Reserva Completada - Mass Motos</title>
     <style>
         /* Centrando y estilizando la página */
         body {
@@ -12,7 +12,7 @@
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
+            background-color: #f3f4f6;
         }
 
         .container {
@@ -49,13 +49,11 @@
             margin-top: 20px;
             padding: 10px 20px;
             color: #fff;
-            background-color: red;
+            background-color: green;
             text-decoration: none;
             border-radius: 4px;
             font-size: 16px;
         }
-
-      
 
         img {
             margin-top: 20px;
@@ -66,19 +64,19 @@
 </head>
 <body>
     <div class="container">
-        <h1>¡Reserva Confirmada!</h1>
+        <h1>¡Reserva Completada!</h1>
         <p>Estimado(a) <span th:text="${usuarioNombreCompleto}">Usuario</span>,</p>
-        <p>Nos complace informarte que tu reserva en Mass Motos ha sido confirmada con éxito.</p>
+        <p>Gracias por completar tu reserva con Mass Motos. Ahora estás un paso más cerca de disfrutar tu experiencia.</p>
         
         <h2>Detalles de la Reserva</h2>
         <p><strong>Nombre de la Moto:</strong> <span th:text="${motoNombre}">[Nombre de la moto]</span></p>
         <p><strong>Modelo de la Moto:</strong> <span th:text="${motoModelo}">[Modelo de la moto]</span></p>
-        <p><strong>Fecha de la Reserva:</strong> <span th:text="${fechaReserva}">Fecha de reserva</span></p>
+        <p><strong>Fecha de la Reserva:</strong> <span th:text="${fechaReserva}">[Fecha de la reserva]</span></p>
+        <p><strong>Estado:</strong> Completada</p>
 
-
-        <p>Si tienes alguna pregunta o necesitas más información, no dudes en contactarnos.</p>
+        <p>Si necesitas más información o asistencia, no dudes en contactarnos. Estamos aquí para ayudarte.</p>
         
-        <a href="http://localhost:3000" class="button">Visítanos para más detalles</a>
+        <a href="http://localhost:3000" class="button">Explora más opciones</a>
 
         <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgtu6QN0jftYBCMEolQjIgI7nwOzyypiW76XgMUFFvna5Dg5HQ7rjvRwc7my-jO-UrgLqDaJ-LruxiaBZd-K4F_uGHbBb5viorUHa_bYTjQ8xLWhaLIbfjC-LDSnV3ooY0lMxY7VBnuiPelxlFv0_pG5Oil4zjuWJhp6Ivs13DbGNXetv5dDvr6-bX16zTW/s320/eHS-1ebx4o_2J-JNS61v8-transformed.webp" alt="Logo de Mass Motos">
     </div>
